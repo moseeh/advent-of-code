@@ -7,46 +7,92 @@ import (
 	"strings"
 )
 
-func main() {
-	filebytes, _ := os.ReadFile("puzzle.txt")
-	filearr := strings.Split(strings.Trim(string(filebytes), "\n"), ", ")
+type Direction int
 
-	horizontal, vertical := 0, 0
+const (
+	North Direction = iota
+	East
+	South
+	West
+)
 
-	directions := []int{1, 1, -1, -1} // north, east, south , west
-	facing := []string{"north", "east", "south", "west"}
+func (d Direction) String() string {
+	directions := []string{"north", "east", "south", "west"}
+	return directions[d]
+}
 
-	index := 0
+type Position struct {
+	X, Y int
+}
 
-	for i, v := range filearr {
-		
-		direction := string(v[0])
-		num, err := strconv.Atoi(v[1:])
-		if err != nil {
-			fmt.Println(err)
-		}
-		switch direction {
-		case "R":
-			index++
-			if index == 4 {
-				index = 0
-			}
-		case "L":
-			index--
-			if index == -1 {
-				index = 3
-			}
-		}
+func (p Position) ManhattanDistance() int {
+	return abs(p.X) + abs(p.Y)
+}
 
-		if i%2 == 0 {
-			horizontal += directions[index] * num
-		} else {
-			vertical += directions[index] * num
-		}
-		fmt.Println(direction)
-		fmt.Println(facing[index], directions[index], num)
-		fmt.Println("current position:", horizontal, vertical)
+func abs(n int) int {
+	if n < 0 {
+		return -n
 	}
-	fmt.Println(horizontal, vertical)
-	fmt.Println(horizontal + vertical)
+	return n
+}
+
+func main() {
+	fileBytes, err := os.ReadFile("puzzle.txt")
+	if err != nil {
+		fmt.Printf("Error reading file: %v\n", err)
+		return
+	}
+
+	instructions := strings.Split(strings.TrimSpace(string(fileBytes)), ", ")
+
+	pos := Position{0, 0}
+	facing := North
+
+	fmt.Printf("Starting at position: %d %d\n", pos.X, pos.Y)
+
+	for _, instruction := range instructions {
+		if len(instruction) < 2 {
+			fmt.Printf("Invalid instruction: %s\n", instruction)
+			continue
+		}
+
+		turn := instruction[0]
+		distanceStr := instruction[1:]
+
+		distance, err := strconv.Atoi(distanceStr)
+		if err != nil {
+			fmt.Printf("Error parsing distance '%s': %v\n", distanceStr, err)
+			continue
+		}
+
+		// Handle turning
+		switch turn {
+		case 'R':
+			facing = (facing + 1) % 4
+		case 'L':
+			facing = (facing + 3) % 4 // Same as (facing - 1 + 4) % 4
+		default:
+			fmt.Printf("Unknown turn direction: %c\n", turn)
+			continue
+		}
+
+		// Move in the current direction
+		switch facing {
+		case North:
+			pos.Y += distance
+		case East:
+			pos.X += distance
+		case South:
+			pos.Y -= distance
+		case West:
+			pos.X -= distance
+		}
+
+		fmt.Printf("%c\n", turn)
+		fmt.Printf("Now facing %s moved %d\n", facing, distance)
+		fmt.Printf("Current position: %d %d\n", pos.X, pos.Y)
+	}
+
+	fmt.Printf("Final position: %d %d\n", pos.X, pos.Y)
+	fmt.Printf("Final distance: %d\n", pos.ManhattanDistance())
 }
