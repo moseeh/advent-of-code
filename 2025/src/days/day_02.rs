@@ -60,10 +60,8 @@ fn is_invalid_id_2(n: u64) -> bool {
         if len % pat_len != 0 {
             continue;
         }
-
         let pattern = &s[..pat_len];
         let repeats = len / pat_len;
-
         if pattern.repeat(repeats) == s {
             return true;
         }
